@@ -3,6 +3,17 @@ import sqlite3
 import pandas as pd
 import matplotlib.pyplot as plt
 
+
+import flet as ft
+
+def main(page: ft.Page):
+    page.title = "Mon app"
+    page.add(ft.Text("Hello depuis Render 🚀"))
+
+app = ft.app(target=main, view=ft.WEB_BROWSER)
+
+
+
 PRIMARY = "#0D47A1"
 IMAGE_BG = "https://images.unsplash.com/photo-1523580846011-d3a5bc25702b"
 
