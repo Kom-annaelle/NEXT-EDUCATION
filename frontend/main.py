@@ -7,13 +7,17 @@ import matplotlib.pyplot as plt
 import flet as ft
 
 def main(page: ft.Page):
-    page.title = "Mon App"
-    page.add(ft.Text("Hello"))
+    page.title = "Mon application"
+    page.add(ft.Text("Hello Render 🚀"))
 
+# port fourni par Render
 port = int(os.environ.get("PORT", 8000))
 
-ft.app(target=main, view=ft.AppView.WEB_BROWSER, port=port)
-
+ft.app(
+    target=main,
+    view=ft.AppView.WEB_BROWSER,
+    port=port,
+)
 
 PRIMARY = "#0D47A1"
 IMAGE_BG = "https://images.unsplash.com/photo-1523580846011-d3a5bc25702b"
