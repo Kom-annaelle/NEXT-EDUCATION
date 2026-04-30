@@ -1,0 +1,257 @@
+import flet as ft
+import sqlite3
+
+PRIMARY_COLOR = "#0D47A1"
+
+# ---------------- DATABASE ----------------
+conn = sqlite3.connect("etudiants.db", check_same_thread=False)
+cursor = conn.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS etudiants (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nom TEXT,
+    prenom TEXT,
+    ecole TEXT,
+    ville TEXT,
+    quartier TEXT,
+    telephone TEXT,
+    email TEXT
+)
+""")
+conn.commit()
+
+def get_data():
+    cursor.execute("SELECT nom, ville, telephone FROM etudiants")
+    return cursor.fetchall()
+
+# ---------------- UI COMPONENT ----------------
+def stat_card(title, value):
+    return ft.Container(
+        width=150,
+        height=100,
+        bgcolor=PRIMARY_COLOR,
+        border_radius=15,
+        padding=10,
+        content=ft.Column(
+            [
+                ft.Text(title, color="white"),
+                ft.Text(value, size=20, weight="bold", color="white")
+            ],
+            alignment="center",
+            horizontal_alignment="center"
+        )
+    )
+
+# ---------------- ACCUEIL ----------------
+def accueil(page):
+
+    return ft.View(
+        "/",
+        controls=[
+            ft.Container(
+                expand=True,
+                content=ft.Column(
+                    [
+                        ft.Text("NEXT_EDUCATION", size=35, weight="bold"),
+                        ft.Text("Recensement intelligent de l’éducation des jeunes"),
+
+                        ft.Row(
+                            [
+                                ft.ElevatedButton(
+                                    "Inscription",
+                                    on_click=lambda e: page.go("/inscription")
+                                ),
+                                ft.OutlinedButton(
+                                    "Admin",
+                                    on_click=lambda e: page.go("/admin")
+                                ),
+                            ],
+                            alignment="center"
+                        )
+                    ],
+                    alignment="center",
+                    horizontal_alignment="center",
+                    spacing=20
+                ),
+                alignment=ft.alignment.center
+            )
+        ]
+    )
+
+# ---------------- INSCRIPTION ----------------
+def inscription(page):
+
+    nom = ft.TextField(label="Nom")
+    prenom = ft.TextField(label="Prénom")
+    ecole = ft.TextField(label="École")
+    ville = ft.TextField(label="Ville")
+    quartier = ft.TextField(label="Quartier")
+    telephone = ft.TextField(label="Téléphone")
+    email = ft.TextField(label="Email")
+
+    message = ft.Text()
+
+    def enregistrer(e):
+
+        if not nom.value or not prenom.value:
+            message.value = "⚠️ Champs obligatoires"
+            message.color = "red"
+        else:
+            cursor.execute("""
+                INSERT INTO etudiants VALUES (NULL,?,?,?,?,?,?,?)
+            """, (
+                nom.value,
+                prenom.value,
+                ecole.value,
+                ville.value,
+                quartier.value,
+                telephone.value,
+                email.value
+            ))
+
+            conn.commit()
+
+            message.value = "✅ Enregistré avec succès"
+            message.color = "green"
+
+        page.update()
+
+    return ft.View(
+        "/inscription",
+        controls=[
+            ft.Column(
+                [
+                    ft.Text("Inscription Étudiant", size=25),
+
+                    nom, prenom, ecole, ville,
+                    quartier, telephone, email,
+
+                    ft.ElevatedButton("Valider", on_click=enregistrer),
+
+                    message,
+
+                    ft.TextButton(
+                        "Retour",
+                        on_click=lambda e: page.go("/")
+                    )
+                ],
+                spacing=10
+            )
+        ]
+    )
+
+# ---------------- ADMIN ----------------
+def admin_login(page):
+
+    username = ft.TextField(label="Admin")
+    password = ft.TextField(label="Password", password=True)
+
+    msg = ft.Text()
+
+    def login(e):
+        if username.value == "admin" and password.value == "1234":
+            page.go("/dashboard")
+        else:
+            msg.value = "❌ Identifiants incorrects"
+            msg.color = "red"
+            page.update()
+
+    return ft.View(
+        "/admin",
+        controls=[
+            ft.Column(
+                [
+                    ft.Text("Connexion Admin"),
+
+                    username,
+                    password,
+
+                    ft.ElevatedButton("Login", on_click=login),
+
+                    msg,
+
+                    ft.TextButton(
+                        "Retour",
+                        on_click=lambda e: page.go("/")
+                    )
+                ],
+                spacing=10
+            )
+        ]
+    )
+
+# ---------------- DASHBOARD ----------------
+def dashboard(page):
+
+    data = get_data()
+
+    return ft.View(
+        "/dashboard",
+        bgcolor="#F5F7FA",
+        controls=[
+            ft.Column(
+                [
+                    ft.Text("DASHBOARD NEXT_EDUCATION", size=25, weight="bold"),
+
+                    ft.Row(
+                        [
+                            stat_card("Étudiants", str(len(data))),
+                            stat_card("Écoles", "15"),
+                            stat_card("Villes", "3")
+                        ],
+                        alignment="center"
+                    ),
+
+                    ft.Container(height=20),
+
+                    ft.Text("Liste des étudiants", size=18),
+
+                    ft.DataTable(
+                        columns=[
+                            ft.DataColumn(ft.Text("Nom")),
+                            ft.DataColumn(ft.Text("Ville")),
+                            ft.DataColumn(ft.Text("Téléphone")),
+                        ],
+                        rows=[
+                            ft.DataRow(cells=[
+                                ft.DataCell(ft.Text(r[0])),
+                                ft.DataCell(ft.Text(r[1])),
+                                ft.DataCell(ft.Text(r[2])),
+                            ]) for r in data
+                        ]
+                    ),
+
+                    ft.ElevatedButton(
+                        "Déconnexion",
+                        on_click=lambda e: page.go("/")
+                    )
+                ],
+                spacing=20
+            )
+        ]
+    )
+
+# ---------------- ROUTING ----------------
+def main(page: ft.Page):
+
+    page.title = "NEXT_EDUCATION"
+
+    def route_change(e):
+        page.views.clear()
+
+        routes = {
+            "/": accueil,
+            "/inscription": inscription,
+            "/admin": admin_login,
+            "/dashboard": dashboard
+        }
+
+        page.views.append(routes[page.route](page))
+        page.update()
+
+    page.on_route_change = route_change
+    page.go("/")
+
+
+ft.app(target=main, view=ft.AppView.WEB_BROWSER)
