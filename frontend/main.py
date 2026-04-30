@@ -4,8 +4,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-import flet as ft
-
 def main(page: ft.Page):
     page.title = "Mon application"
     page.add(ft.Text("Hello Render 🚀"))
