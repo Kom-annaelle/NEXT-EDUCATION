@@ -10,8 +10,6 @@ def main(page: ft.Page):
     page.title = "Mon app"
     page.add(ft.Text("Hello depuis Render 🚀"))
 
-app = ft.app(target=main, view=ft.WEB_BROWSER)
-
 
 
 PRIMARY = "#0D47A1"
