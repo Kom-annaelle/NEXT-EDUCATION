@@ -7,9 +7,12 @@ import matplotlib.pyplot as plt
 import flet as ft
 
 def main(page: ft.Page):
-    page.title = "Mon app"
-    page.add(ft.Text("Hello depuis Render 🚀"))
+    page.title = "Mon App"
+    page.add(ft.Text("Hello"))
 
+port = int(os.environ.get("PORT", 8000))
+
+ft.app(target=main, view=ft.AppView.WEB_BROWSER, port=port)
 
 
 PRIMARY = "#0D47A1"
